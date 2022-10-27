@@ -1,0 +1,196 @@
+<div id=D__ID>
+	<!--third html start -->
+		<div class="container mt-95 mb-3">
+		  	<div class="row" >
+			<!-- form container start -->
+				<div class="col-12 col-lg-12 col-md-12 col-sm-12 mx-auto formbox">
+			  		<div class="row">
+						<div class="col-12">
+				  		<!-- form start -->
+				  		<form id="F__ID">
+					  		<h3 id=title__ID></h3>
+							<div class="row px-4">
+								<div class='col'>
+								   <span>File</span>
+								   <div class="form-control">
+									   <u style='cursor:pointer' id=link_File_Name__ID></u>
+									   <br>
+									   <input type="file" name=File_Name style="margin-top:6px" /> &nbsp&nbsp&nbsp <button type="button" id=x_File_Name__ID>Remove</button>
+								   </div>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	VmInclude:__COMPONENT__/m/model.01.html
+	<script>
+		//---------------------------------------------
+		function F__ID(){
+			//-------------------------------------
+			VmInclude:'__COMPONENT__/f/form.01.js'
+			VmInclude:__CURRENT_PATH__/shared-form.js
+			//-------------------------------------
+			var version="JS 1.01"
+			// Analysing standard partition lenght. If drive short the analysis only calculate full partitions and leave others empty. 
+			//-------------------------------------
+			var load2=m.load;
+			m.load=function(){
+				load2();
+				$('#title__ID').html($vm.module_list[$vm.vm['__ID'].name].task_name+"&nbsp;&nbsp;<span style='font-size:0.7rem'>Version "+version+"</span>");
+				if(m.input.readonly!=undefined) $('#submit__ID').hide();
+				m.set_file_link("File_Name");
+			}
+			//-------------------------------------
+			$('#F__ID input[name=File_Name]').on('change',function(evt){
+				if(this.files.length==1){
+					file_process(this.files[0])
+				}
+			})
+			//-------------------------------------
+			m.before_submit=function(data,index){
+			}
+			//-------------------------------------
+			var file_process=function(file){
+				/*var stateNames = {};
+				stateNames[FileReader.EMPTY]   = 'EMPTY';
+				stateNames[FileReader.LOADING] = 'LOADING';
+				stateNames[FileReader.DONE]    = 'DONE';
+				*/
+				var openFile = function(event) {
+					//var input = event.target;
+					var reader = new FileReader();
+					reader.onload = function(){
+						//console.log('After load: ' + stateNames[reader.readyState]);
+					};
+					//console.log('Before read: ' + stateNames[reader.readyState]);
+					reader.readAsArrayBuffer(file);
+					//console.log('After read: ' + stateNames[reader.readyState]);
+					reader.onloadend = function() {
+						var array=reader.result;
+						var arrlength=array.byteLength;
+						var modbuf= new ArrayBuffer(arrlength);
+						var hd= new DataView(array,0,arrlength);
+						var dh= new DataView(modbuf,0,arrlength);
+						var startData=0;
+						var startSide=0;
+						var startObsacle=0;
+						for (var i=0;i<5000;i++){
+							//console.log(String.fromCharCode(hd.getInt8(i))+' '+String.fromCharCode(hd.getInt8(i+1))+' '+String.fromCharCode(hd.getInt8(i+2)));
+							if(String.fromCharCode(hd.getInt8(i))=='[' && String.fromCharCode(hd.getInt8(i+1))=='S' && String.fromCharCode(hd.getInt8(i+2))=='i') {startSide=i+16;}
+							if(String.fromCharCode(hd.getInt8(i))=='[' && String.fromCharCode(hd.getInt8(i+1))=='O' && String.fromCharCode(hd.getInt8(i+2))=='b') {startObsacle=i+12;}
+							if(String.fromCharCode(hd.getInt8(i))=='[' && String.fromCharCode(hd.getInt8(i+1))=='D' && String.fromCharCode(hd.getInt8(i+2))=='a') {startData=i+8;break;}
+						}
+						var obstacle=[];
+						var j=0;
+						var obs="";
+						while (String.fromCharCode(hd.getInt8(startObsacle+j))!='['){
+							if(String.fromCharCode(hd.getInt8(startObsacle+j))==',') {
+								while (String.fromCharCode(hd.getInt8(startObsacle+j))!='\r'){
+									j++
+									obs+=String.fromCharCode(hd.getInt8(startObsacle+j));
+								}
+								obstacle.push(obs);
+								obs="";
+							}
+							j++;
+						}
+						//console.log(obstacle)
+						var side=180.0;
+						if(String.fromCharCode(hd.getInt8(startSide))=='L') side=-180.0;
+						var timestamps=parseInt((arrlength-startData)/38);
+						var timingArr=[];
+						var positionArr=[];
+						var speedArr=[];
+						var roadArr=[];
+						var wheelArr=[];
+						var pedalArr=[];
+						var flagArr=[];
+						var starttime=hd.getUint8(startData)+hd.getUint8(startData+1)*256+hd.getUint8(startData+2)*256*256+hd.getUint8(startData+3)*256*256*256;
+						for(var i=0;i<timestamps;i++){
+							//time
+							dh.setUint8(startData+i*38,hd.getUint8(startData+i*38+3))
+							dh.setUint8(startData+i*38+1,hd.getUint8(startData+i*38+2))
+							dh.setUint8(startData+i*38+2,hd.getUint8(startData+i*38+1))
+							dh.setUint8(startData+i*38+3,hd.getUint8(startData+i*38))
+							//speed
+							dh.setUint8(startData+i*38+4,hd.getUint8(startData+i*38+11))
+							dh.setUint8(startData+i*38+5,hd.getUint8(startData+i*38+10))
+							dh.setUint8(startData+i*38+6,hd.getUint8(startData+i*38+9))
+							dh.setUint8(startData+i*38+7,hd.getUint8(startData+i*38+8))
+							dh.setUint8(startData+i*38+8,hd.getUint8(startData+i*38+7))
+							dh.setUint8(startData+i*38+9,hd.getUint8(startData+i*38+6))
+							dh.setUint8(startData+i*38+10,hd.getUint8(startData+i*38+5))
+							dh.setUint8(startData+i*38+11,hd.getUint8(startData+i*38+4))
+							//position
+							dh.setUint8(startData+i*38+12,hd.getUint8(startData+i*38+19))
+							dh.setUint8(startData+i*38+13,hd.getUint8(startData+i*38+18))
+							dh.setUint8(startData+i*38+14,hd.getUint8(startData+i*38+17))
+							dh.setUint8(startData+i*38+15,hd.getUint8(startData+i*38+16))
+							dh.setUint8(startData+i*38+16,hd.getUint8(startData+i*38+15))
+							dh.setUint8(startData+i*38+17,hd.getUint8(startData+i*38+14))
+							dh.setUint8(startData+i*38+18,hd.getUint8(startData+i*38+13))
+							dh.setUint8(startData+i*38+19,hd.getUint8(startData+i*38+12))
+							//road
+							dh.setUint8(startData+i*38+20,hd.getUint8(startData+i*38+20))
+							//wheel
+							dh.setUint8(startData+i*38+21,hd.getUint8(startData+i*38+28))
+							dh.setUint8(startData+i*38+22,hd.getUint8(startData+i*38+27))
+							dh.setUint8(startData+i*38+23,hd.getUint8(startData+i*38+26))
+							dh.setUint8(startData+i*38+24,hd.getUint8(startData+i*38+25))
+							dh.setUint8(startData+i*38+25,hd.getUint8(startData+i*38+24))
+							dh.setUint8(startData+i*38+26,hd.getUint8(startData+i*38+23))
+							dh.setUint8(startData+i*38+27,hd.getUint8(startData+i*38+22))
+							dh.setUint8(startData+i*38+28,hd.getUint8(startData+i*38+21))
+							//pedals
+							dh.setUint8(startData+i*38+29,hd.getUint8(startData+i*38+36))
+							dh.setUint8(startData+i*38+30,hd.getUint8(startData+i*38+35))
+							dh.setUint8(startData+i*38+31,hd.getUint8(startData+i*38+34))
+							dh.setUint8(startData+i*38+32,hd.getUint8(startData+i*38+33))
+							dh.setUint8(startData+i*38+33,hd.getUint8(startData+i*38+32))
+							dh.setUint8(startData+i*38+34,hd.getUint8(startData+i*38+31))
+							dh.setUint8(startData+i*38+35,hd.getUint8(startData+i*38+30))
+							dh.setUint8(startData+i*38+36,hd.getUint8(startData+i*38+29))
+							//flag
+							dh.setUint8(startData+i*38+37,hd.getUint8(startData+i*38+37))
+							//
+							timingArr.push(dh.getInt32(startData+38*i)-starttime);
+							speedArr.push(dh.getFloat64(startData+4+38*i));
+							positionArr.push(dh.getFloat64(startData+12+38*i)*100+side);
+							roadArr.push(dh.getUint8(startData+20+38*i));
+							wheelArr.push(dh.getFloat64(startData+21+38*i));
+							pedalArr.push(dh.getFloat64(startData+29+38*i));
+							flagArr.push(dh.getUint8(startData+37+38*i));
+						}
+						console.log(JSON.stringify(timingArr))
+						var output=[];
+						var header=["Time","Speed","Position","Road Type","Wheel-Input","Pedal_input","Flag"]
+						output.push(header);
+						var rw={}
+						for (var k=0;k<timingArr.length;k++){
+							rw=[timingArr[k].toFixed(0),speedArr[k].toFixed(3),positionArr[k].toFixed(3),roadArr[k].toFixed(0),wheelArr[k].toFixed(3),pedalArr[k].toFixed(3),flagArr[k].toFixed(0)]
+							output.push(rw);
+						}
+						console.log(JSON.stringify(output))
+						//var new_out=[];
+						//new_out.push(JSON.parse(output))
+						var aa=$('#F__ID input[name=File_Name]').val();
+						aa=aa.substr(aa.lastIndexOf('\\')+1);
+						$vm.download_csv(aa+".csv",output);
+					}
+				};
+				openFile();
+			}
+			//-------------------------------------
+		}
+	</script>
+	<style>
+		#D__ID .mt-95 {
+			max-width:800px;
+		}
+		VmInclude:__CURRENT_PATH__/wappsystem-form.css
+	</style>
+</div>
+		
